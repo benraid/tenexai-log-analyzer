@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tenex
+      POSTGRES_PASSWORD: tenex
+      POSTGRES_DB: tenex
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tenex -d tenex"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://tenex:tenex@postgres:5432/tenex?sslmode=disable
+      JWT_SECRET: dev-secret-change-me
+      SEED_USERNAME: admin
+      SEED_PASSWORD: admin123
+      PORT: "8080"
+      MIGRATIONS_DIR: /app/db/migrations
+      # AI is optional — set ANTHROPIC_API_KEY in your shell (or .env) to
+      # enable the SOC briefing and per-anomaly explain features. Unset = the
+      # AI endpoints respond with 503 and the rest of the app keeps working.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE: http://localhost:8080
+
+volumes:
+  pgdata:

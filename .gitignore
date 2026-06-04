@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+backend/server
+frontend/dist/
+
+# Personal notes kept out of the public repo
+ARCHITECTURE.md
+CODE_EXPLAINED.md
+OVERVIEW.md
