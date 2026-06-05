@@ -4,8 +4,8 @@ import { api, setToken } from "../lib/api";
 
 export function LoginPage() {
   const nav = useNavigate();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
