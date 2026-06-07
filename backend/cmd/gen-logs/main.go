@@ -102,8 +102,8 @@ func generateWithAnomalies(rng *rand.Rand, n int) [][]string {
 		base.Add(45 * time.Minute).Format(time.RFC3339),
 		"akhan", "10.0.4.22", "185.10.20.30",
 		"https://malicious-site.io/payload.bin",
-		"Malware", "blocked",
-		"Trojan.Win32.Generic", "Malware",
+		"Malicious Content", "blocked",
+		"Trojan.Win32.Generic", "Trojan",
 		"412", "8123",
 		"Mozilla/5.0 Chrome/121", "",
 	})
@@ -113,7 +113,7 @@ func generateWithAnomalies(rng *rand.Rand, n int) [][]string {
 		base.Add(50 * time.Minute).Format(time.RFC3339),
 		"lchen", "10.0.4.23", "194.55.66.77",
 		"https://login-microsoftt.support/account",
-		"phishing", "allowed",
+		"Phishing", "allowed",
 		"", "", "1450", "920",
 		"Mozilla/5.0 Chrome/121", "",
 	})
@@ -126,7 +126,7 @@ func generateWithAnomalies(rng *rand.Rand, n int) [][]string {
 			"contractor1", "10.0.4.99",
 			fmt.Sprintf("203.0.113.%d", 10+i),
 			fmt.Sprintf("https://suspicious-cdn.example/r%d", i),
-			"Anonymizers", "blocked",
+			"Miscellaneous or Unknown", "blocked",
 			"", "", "200", "0",
 			"curl/8.4.0", "",
 		})

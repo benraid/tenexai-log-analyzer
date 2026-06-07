@@ -64,28 +64,52 @@ func ruleThreatHit(uploadID uuid.UUID, entries []models.LogEntry, ids []int64) [
 }
 
 // Rule 2: requests to URL categories that are inherently risky.
+// Category names come from Zscaler's actual URL Categorization taxonomy
+// (Advanced Security Risk + Privacy Risk classes). Severity is tiered:
+// known-malicious infrastructure gets high confidence; suspicious or
+// dual-use categories get medium confidence. Match is case-insensitive
+// so customer-export capitalization variants still hit.
 func ruleMaliciousCategory(uploadID uuid.UUID, entries []models.LogEntry, ids []int64) []models.Anomaly {
-	bad := map[string]bool{
-		"malware":             true,
-		"malware-sites":       true,
-		"phishing":            true,
-		"botnet":              true,
-		"command-and-control": true,
-		"spyware":             true,
-		"cryptomining":        true,
+	type sev struct {
+		confidence float32
+		risk       string // short label embedded in the explanation
 	}
+	cats := map[string]sev{
+		// High-severity — known malicious infrastructure
+		"malicious content":          {0.92, "malicious infrastructure"},
+		"phishing":                   {0.92, "phishing"},
+		"browser exploit":            {0.92, "browser exploit kit"},
+		"botnet protection":          {0.92, "botnet C2"},
+		"spyware callback":           {0.90, "spyware C2"},
+		"cross site scripting (xss)": {0.90, "XSS attack vector"},
+		"spyware/adware":             {0.85, "spyware/adware"},
+		"adware/spyware sites":       {0.85, "adware/spyware"},
+
+		// Medium-severity — suspicious / dual-use
+		"cryptomining and blockchain":           {0.75, "cryptomining"},
+		"suspicious destinations protection":    {0.75, "suspicious destination"},
+		"unauthorized communication protection": {0.75, "unauthorized communication"},
+		"suspicious content":                    {0.70, "suspicious content"},
+		"computer hacking":                      {0.70, "hacking tooling"},
+		"dynamic dns host":                      {0.65, "dynamic DNS (common C2 hosting)"},
+		"newly revived domains":                 {0.65, "newly revived domain"},
+		"anonymizer":                            {0.65, "anonymizer/proxy"},
+		"custom encrypted content":              {0.65, "custom encrypted content"},
+	}
+
 	var out []models.Anomaly
 	for i, e := range entries {
 		cat := strings.ToLower(strings.TrimSpace(e.URLCategory))
-		if !bad[cat] {
+		s, ok := cats[cat]
+		if !ok {
 			continue
 		}
 		out = append(out, models.Anomaly{
 			UploadID:    uploadID,
 			LogEntryID:  ids[i],
 			RuleName:    "malicious_category",
-			Explanation: fmt.Sprintf("Request to %s — URL category %q is on the high-risk list", e.URL, e.URLCategory),
-			Confidence:  0.9,
+			Explanation: fmt.Sprintf("Request to %s — URL category %q (%s)", e.URL, e.URLCategory, s.risk),
+			Confidence:  s.confidence,
 		})
 	}
 	return out

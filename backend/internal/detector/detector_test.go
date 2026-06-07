@@ -134,10 +134,10 @@ func TestRuleMaliciousCategory(t *testing.T) {
 	}{
 		{"empty input → no anomalies", nil, 0},
 		{"benign category → not flagged", []models.LogEntry{entry(category("News"))}, 0},
-		{"malware → flagged", []models.LogEntry{entry(category("Malware"))}, 1},
-		{"phishing → flagged", []models.LogEntry{entry(category("phishing"))}, 1},
-		{"case-insensitive matching", []models.LogEntry{entry(category("BOTNET"))}, 1},
-		{"command-and-control → flagged", []models.LogEntry{entry(category("command-and-control"))}, 1},
+		{"Malicious Content → flagged", []models.LogEntry{entry(category("Malicious Content"))}, 1},
+		{"Phishing → flagged", []models.LogEntry{entry(category("Phishing"))}, 1},
+		{"case-insensitive matching", []models.LogEntry{entry(category("BOTNET PROTECTION"))}, 1},
+		{"Anonymizer (medium severity) → flagged", []models.LogEntry{entry(category("Anonymizer"))}, 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -434,9 +434,9 @@ func TestDetect_Integration(t *testing.T) {
 		))
 	}
 	// Rule 1: threat_hit
-	entries = append(entries, entry(threat("Trojan.Win32.Generic"), category("Malware")))
+	entries = append(entries, entry(threat("Trojan.Win32.Generic"), category("Malicious Content")))
 	// Rule 2: malicious_category (already on the row above; add a second pure-category hit)
-	entries = append(entries, entry(category("phishing")))
+	entries = append(entries, entry(category("Phishing")))
 	// Rule 3: blocked_spike_per_ip — 15 blocked from 10.0.4.99
 	for i := 0; i < 15; i++ {
 		entries = append(entries, entry(srcIP("10.0.4.99"), action("blocked")))
