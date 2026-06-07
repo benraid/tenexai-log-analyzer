@@ -4,6 +4,12 @@ Full-stack web app that lets a SOC analyst upload Zscaler-style web-proxy logs a
 
 Built as the Tenex.ai engineering take-home — the brief is "functional prototype, not production-ready" with a 6–8 hour scope.
 
+## Live demo
+
+**<https://tenexai-log-analyzer-1.onrender.com/login>** — log in as `admin` / `admin123`
+
+The deploy runs on Render's free tier, which sleeps after 15 min of inactivity. The first request after a quiet period takes ~50 seconds to wake the backend; after that it's instant. Upload `sample-logs/zscaler_with_anomalies.csv` (from this repo) on the **+ New upload** page to see the detector and the AI briefing in action.
+
 ## Architecture
 
 ```
