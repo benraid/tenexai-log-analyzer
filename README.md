@@ -89,7 +89,7 @@ Rule-based + simple statistics (population z-score). No LLM in the detection pat
 | Rule | What it flags | Confidence |
 |---|---|---|
 | `threat_hit` | Vendor-flagged threat in the log row | 0.95 |
-| `malicious_category` | URL category ∈ {malware, phishing, botnet, c2, spyware, cryptomining} | 0.90 |
+| `malicious_category` | URL category matches Zscaler's Advanced Security or Privacy Risk taxonomy (17 categories, tiered) — e.g. `Malicious Content`, `Phishing`, `Botnet Protection`, `Anonymizer`, `Cryptomining and Blockchain` | 0.65–0.92 |
 | `blocked_spike_per_ip` | A single src_ip with > 10 blocked actions in the upload | 0.80 |
 | `high_request_rate` | Per-IP 5-min bucket count > population mean + 3σ (floor: 5) | 0.70 |
 | `data_exfiltration` | `bytes_out` > mean + 3σ across the dataset (floor: 1 MB) | 0.75 |
@@ -98,9 +98,11 @@ Rule-based + simple statistics (population z-score). No LLM in the detection pat
 
 Each anomaly row carries a `rule_name`, a human-readable `explanation` (e.g. `"IP 10.0.4.99 had 25 blocked requests (> threshold of 10)"`), and a `confidence` between 0 and 1. Multiple rules can flag the same row.
 
+The detector rules have **table-driven unit tests** in [`backend/internal/detector/detector_test.go`](backend/internal/detector/detector_test.go) — 30+ subtests covering each rule, boundary cases, and an integration test that runs all 7 rules against a synthetic dataset. Same-package tests so they can exercise the unexported rule functions directly. Run with `go test ./internal/detector/`.
+
 ## Where AI is used
 
-**Two distinct uses — keep them separate when you discuss the project:**
+AI shows up in two distinct places in this project — one at runtime, one during development.
 
 ### 1. AI *in* the application (runtime)
 An optional **Claude Haiku 4.5** integration that runs on top of the rule-based detection:
@@ -115,7 +117,7 @@ Code: `backend/internal/ai/client.go` (one file, ~200 lines, hits the Anthropic 
 ### 2. AI in the *development* process
 Claude (Opus 4.7) was used as a pair-programmer for scaffolding the Go layout, schema design, the detector rules, and the React dashboard. Every file was reviewed and validated; the architectural decisions (Go stdlib + chi, rule-based detection, JWT, Postgres) were made and defended before any code was written.
 
-**Why no LLM in the detection path itself?** Explainability, determinism, cost, and latency. Detection needs to be reproducible and auditable; a SOC analyst should never see "the model said so" as the only justification. The talk-track in `CODE_EXPLAINED.md` expands on this.
+**Why no LLM in the detection path itself?** Explainability, determinism, cost, and latency. Detection needs to be reproducible and auditable; a SOC analyst should never see "the model said so" as the only justification.
 
 ## Production gaps (intentional, given the 6–8 hour scope)
 
@@ -156,5 +158,4 @@ sample-logs/
   zscaler_clean.csv
   zscaler_with_anomalies.csv   # plants one row for each of the 7 rules
 docker-compose.yml
-CODE_EXPLAINED.md    # interview-prep doc — every Go idiom used, with the "why"
 ```
